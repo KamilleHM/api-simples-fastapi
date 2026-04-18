@@ -37,3 +37,13 @@ jobs:
     - name: Test with pytest
       run: |
         python -m pytest
+
+    - name: Zip project files
+      run: |
+        zip -r project.zip . -x '*.git*' '*.venv*' '*.pytest_cache*' '*.mypy_cache*' '*.github/artifacts*'
+
+    - name: Upload project artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-zip
+        path: project.zip
