@@ -42,6 +42,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Zip project files
         run: |
           zip -r project.zip . -x '*.git*' '*.venv*' '*.pytest_cache*' '*.mypy_cache*' '*.github/artifacts*'
