@@ -38,6 +38,24 @@ jobs:
       run: |
         python -m pytest
 
+
+  notify-discord:
+    needs: deployment
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Discord
+        uses: Ilshidur/action-discord@master
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ needs.deployment.result }}
+          message: |
+            ${{
+              (needs.deployment.result == 'success' && 'PR finalizado com sucesso!') ||
+              (needs.deployment.result == 'failure' && 'PR falhou em algum step.') ||
+              format('PR finalizado com status: {0}', needs.deployment.result)
+            }}
+
   deployment:
     needs: build
     runs-on: ubuntu-latest
