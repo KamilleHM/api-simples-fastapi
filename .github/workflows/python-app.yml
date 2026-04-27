@@ -44,37 +44,53 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Notify Discord
-        run: |
-          STATUS="${{ needs.deployment.result }}"
-          if [ "$STATUS" = "success" ]; then
-            COLOR="28a745"
-            TITLE="PR Finalizado com Sucesso!"
-            DESCRIPTION="Todos os testes passaram e o deployment foi realizado com sucesso! 🚀"
-          else
-            COLOR="dc3545"
-            TITLE="PR Falhou!"
-            DESCRIPTION="Houve uma falha em alguma das etapas. Verifique os logs para mais detalhes."
-          fi
-          
-          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"embeds\": [{
-                \"title\": \"$TITLE\",
-                \"description\": \"$DESCRIPTION\",
-                \"color\": \"0x$COLOR\",
-                \"fields\": [
-                  {\"name\": \"Repositório\", \"value\": \"${{ github.repository }}\", \"inline\": true},
-                  {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
-                  {\"name\": \"Commit\", \"value\": \"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": false},
-                  {\"name\": \"Autor\", \"value\": \"${{ github.actor }}\", \"inline\": true},
-                  {\"name\": \"Status\", \"value\": \"$STATUS\", \"inline\": true}
-                ],
-                \"footer\": {\"text\": \"GitHub Actions\"},
-                \"timestamp\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"
-              }]
-            }"
+      - name: Notify Discord - Success
+        if: needs.deployment.result == 'success'
+        uses: zerodevx/discord-webhook@v3
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          message: |
+            {
+              "embeds": [
+                {
+                  "title": "✅ PR Finalizado com Sucesso!",
+                  "description": "Todos os testes passaram e o deployment foi realizado com sucesso! 🚀",
+                  "color": 2663043,
+                  "fields": [
+                    {"name": "Repositório", "value": "${{ github.repository }}", "inline": true},
+                    {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                    {"name": "Autor", "value": "${{ github.actor }}", "inline": true},
+                    {"name": "Commit SHA", "value": "${{ github.sha }}", "inline": false}
+                  ],
+                  "footer": {"text": "GitHub Actions"},
+                  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+                }
+              ]
+            }
+      
+      - name: Notify Discord - Failure
+        if: needs.deployment.result == 'failure'
+        uses: zerodevx/discord-webhook@v3
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          message: |
+            {
+              "embeds": [
+                {
+                  "title": "❌ PR Falhou!",
+                  "description": "Houve uma falha em alguma das etapas. Verifique os logs para mais detalhes.",
+                  "color": 14362440,
+                  "fields": [
+                    {"name": "Repositório", "value": "${{ github.repository }}", "inline": true},
+                    {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
+                    {"name": "Autor", "value": "${{ github.actor }}", "inline": true},
+                    {"name": "Commit SHA", "value": "${{ github.sha }}", "inline": false}
+                  ],
+                  "footer": {"text": "GitHub Actions"},
+                  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+                }
+              ]
+            }
 
   deployment:
     needs: build
