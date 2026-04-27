@@ -46,51 +46,35 @@ jobs:
     steps:
       - name: Notify Discord - Success
         if: needs.deployment.result == 'success'
-        uses: zerodevx/discord-webhook@v3
+        uses: tsickert/discord-webhook@v7.0.0
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
-            {
-              "embeds": [
-                {
-                  "title": "✅ PR Finalizado com Sucesso!",
-                  "description": "Todos os testes passaram e o deployment foi realizado com sucesso! 🚀",
-                  "color": 2663043,
-                  "fields": [
-                    {"name": "Repositório", "value": "${{ github.repository }}", "inline": true},
-                    {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
-                    {"name": "Autor", "value": "${{ github.actor }}", "inline": true},
-                    {"name": "Commit SHA", "value": "${{ github.sha }}", "inline": false}
-                  ],
-                  "footer": {"text": "GitHub Actions"},
-                  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-                }
-              ]
-            }
-      
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            ✅ **PR Finalizado com Sucesso!**
+            Todos os testes passaram e o deployment foi realizado com sucesso! 🚀
+            
+            **Detalhes:**
+            Repositório: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Autor: ${{ github.actor }}
+            Commit: ${{ github.sha }}
+            Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
       - name: Notify Discord - Failure
         if: needs.deployment.result == 'failure'
-        uses: zerodevx/discord-webhook@v3
+        uses: tsickert/discord-webhook@v7.0.0
         with:
-          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
-            {
-              "embeds": [
-                {
-                  "title": "❌ PR Falhou!",
-                  "description": "Houve uma falha em alguma das etapas. Verifique os logs para mais detalhes.",
-                  "color": 14362440,
-                  "fields": [
-                    {"name": "Repositório", "value": "${{ github.repository }}", "inline": true},
-                    {"name": "Branch", "value": "${{ github.ref_name }}", "inline": true},
-                    {"name": "Autor", "value": "${{ github.actor }}", "inline": true},
-                    {"name": "Commit SHA", "value": "${{ github.sha }}", "inline": false}
-                  ],
-                  "footer": {"text": "GitHub Actions"},
-                  "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-                }
-              ]
-            }
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            ❌ **PR Falhou!**
+            Houve uma falha em alguma das etapas. Verifique os logs para mais detalhes.
+            
+            **Detalhes:**
+            Repositório: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Autor: ${{ github.actor }}
+            Commit: ${{ github.sha }}
+            Link: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
   deployment:
     needs: build
