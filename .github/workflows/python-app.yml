@@ -45,16 +45,36 @@ jobs:
     if: always()
     steps:
       - name: Notify Discord
-        uses: Ilshidur/action-discord@master
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: ${{ needs.deployment.result }}
-          message: |
-            ${{
-              (needs.deployment.result == 'success' && 'PR finalizado com sucesso!') ||
-              (needs.deployment.result == 'failure' && 'PR falhou em algum step.') ||
-              format('PR finalizado com status: {0}', needs.deployment.result)
-            }}
+        run: |
+          STATUS="${{ needs.deployment.result }}"
+          if [ "$STATUS" = "success" ]; then
+            COLOR="28a745"
+            TITLE="PR Finalizado com Sucesso!"
+            DESCRIPTION="Todos os testes passaram e o deployment foi realizado com sucesso! 🚀"
+          else
+            COLOR="dc3545"
+            TITLE="PR Falhou!"
+            DESCRIPTION="Houve uma falha em alguma das etapas. Verifique os logs para mais detalhes."
+          fi
+          
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"$TITLE\",
+                \"description\": \"$DESCRIPTION\",
+                \"color\": \"0x$COLOR\",
+                \"fields\": [
+                  {\"name\": \"Repositório\", \"value\": \"${{ github.repository }}\", \"inline\": true},
+                  {\"name\": \"Branch\", \"value\": \"${{ github.ref_name }}\", \"inline\": true},
+                  {\"name\": \"Commit\", \"value\": \"[${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})\", \"inline\": false},
+                  {\"name\": \"Autor\", \"value\": \"${{ github.actor }}\", \"inline\": true},
+                  {\"name\": \"Status\", \"value\": \"$STATUS\", \"inline\": true}
+                ],
+                \"footer\": {\"text\": \"GitHub Actions\"},
+                \"timestamp\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"
+              }]
+            }"
 
   deployment:
     needs: build
