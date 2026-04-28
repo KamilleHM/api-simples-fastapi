@@ -22,4 +22,4 @@ def test_subtract_numbers():
 
     # Input inválido
     response = client.get("/subtract?a=abc&b=1")
-    assert response.status_code == 455
+    assert response.status_code == 422
